@@ -13,7 +13,7 @@ from cryptography.x509.oid import NameOID
 
 logging.basicConfig(level=logging.INFO)
 
-BASE_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), "sslv2")
+BASE_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), "ssl")
 
 if not os.path.exists(BASE_DIR):
     logging.info(f"Create BASE_DIR: {BASE_DIR}")
@@ -65,20 +65,20 @@ brokers = [
         keystorepass="keypw_kafka3",
     ),
     Broker(
-        "kafka_ssl-zookeeper-1.kafka_ssl_default",
-        dns=["kafka_ssl-zookeeper-1.kafka_ssl_default"],
+        "zookeeper",
+        dns=["zookeeper"],
         truststorepass="trustzookeeper",
         keystorepass="keypw_zookeeper",
     ),
     Broker(
-        "kafka_ssl-zookeeper2-1.kafka_ssl_default",
-        dns=["kafka_ssl-zookeeper2-1.kafka_ssl_default"],
+        "zookeeper2",
+        dns=["zookeeper2"],
         truststorepass="trustzookeeper2",
         keystorepass="keypw_zookeeper2",
     ),
     Broker(
-        "kafka_ssl-zookeeper3-1.kafka_ssl_default",
-        dns=["kafka_ssl-zookeeper3-1.kafka_ssl_default"],
+        "zookeeper3",
+        dns=["zookeeper3"],
         truststorepass="trustzookeeper3",
         keystorepass="keypw_zookeeper3",
     ),
