@@ -1,0 +1,230 @@
+version: "3"
+
+x-broker-config:
+  &broker-config
+  KAFKA_CFG_ZOOKEEPER_CONNECT: zookeeper:3181,zookeeper2:3181,zookeeper3:3181
+  KAFKA_CFG_SECURITY_INTER_BROKER_PROTOCOL: SSL
+  KAFKA_CFG_SSL_CLIENT_AUTH: requested
+  KAFKA_CFG_SSL_KEYSTORE_TYPE: JKS
+  KAFKA_CFG_SSL_TRUSTSTORE_TYPE: JKS
+  KAFKA_SECURITY_PROTOCOL: SSL
+  KAFKA_ZOOKEEPER_PROTOCOL: SSL
+  KAFKA_ZOOKEEPER_TLS_KEYSTORE_PASSWORD: kafkazookeeper
+  KAFKA_ZOOKEEPER_TLS_TRUSTSTORE_PASSWORD: kafkazookeeper
+  KAFKA_ZOOKEEPER_TLS_TYPE: JKS
+  KAFKA_ZOOKEEPER_TLS_VERIFY_HOSTNAME: false
+  KAFKA_ZOOKEEPER_TLS_TRUSTSTORE_FILE: /opt/bitnami/kafka/config/certs/zookeeper.truststore.jks
+  KAFKA_CFG_SSL_KEYSTORE_LOCATION: /opt/bitnami/kafka/config/certs/kafka.keystore.jks
+  KAFKA_CFG_SSL_TRUSTSTORE_LOCATION: /opt/bitnami/kafka/config/certs/kafka.truststore.jks
+  KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: false
+  # Debug
+  # BITNAMI_DEBUG: true
+  # EXTRA_ARGS: -Djavax.net.debug=all
+
+x-zookeeper-config:
+  &zookeeper-config
+  ALLOW_EMPTY_PASSWORD: yes
+  ZOO_TLS_CLIENT_ENABLE: yes
+  ZOO_TLS_CLIENT_KEYSTORE_FILE: /zookeeper.keystore.jks
+  ZOO_TLS_CLIENT_KEYSTORE_PASSWORD: keypw_zookeeper
+  ZOO_TLS_CLIENT_TRUSTSTORE_FILE: /zookeeper.truststore.jks
+  ZOO_TLS_CLIENT_TRUSTSTORE_PASSWORD: trustzookeeper
+  ZOO_TLS_CLIENT_AUTH: need
+  ALLOW_ANONYMOUS_LOGIN: no
+  ZOO_ENABLE_AUTH: yes
+  ZOO_SERVERS: zookeeper:2888:3888,zookeeper2:2888:3888,zookeeper3:2888:3888
+  # TLS Quorum
+  ZOO_TLS_QUORUM_ENABLE: true
+  ZOO_TLS_QUORUM_KEYSTORE_FILE: /zookeeper.keystore.jks
+  ZOO_TLS_QUORUM_TRUSTSTORE_FILE: /zookeeper.truststore.jks
+  ZOO_TLS_QUORUM_CLIENT_AUTH: need
+  #  debug
+  ZOO_LOG_LEVEL: DEBUG
+  JVMFLAGS: -Djavax.net.debug=all
+
+x-consumer-config:
+  &consumer-config
+  KEY_PASSWORD: consumer_key_password
+  BOOTSTRAP_SERVERS: kafka1:9092
+  TOPIC: seaborne
+  GROUP_ID: mighty_consumer
+
+services:
+  zookeeper:
+    image: 'bitnami/zookeeper:3.7'
+    ports:
+      # - '2181:2181'
+      - '3181:3181'
+    environment:
+      <<: *zookeeper-config
+      ZOO_SERVER_ID: 1
+      ZOO_TLS_CLIENT_KEYSTORE_PASSWORD: keypw_zookeeper
+      ZOO_TLS_CLIENT_TRUSTSTORE_PASSWORD: trustzookeeper
+      ZOO_TLS_QUORUM_KEYSTORE_PASSWORD: keypw_zookeeper
+      ZOO_TLS_QUORUM_TRUSTSTORE_PASSWORD: trustzookeeper
+
+    volumes:
+      - zookeeper_1_data:/bitnami/zookeeper
+      - "./ssl/zookeeper/zookeeper.keystore.jks:/zookeeper.keystore.jks:ro"
+      - "./ssl/zookeeper/zookeeper.truststore.jks:/zookeeper.truststore.jks:ro"
+
+  zookeeper2:
+    image: 'bitnami/zookeeper:3.7'
+    ports:
+      # - '2181:2181'
+      - '3182:3181'
+    environment:
+      <<: *zookeeper-config
+      ZOO_SERVER_ID: 2
+      ZOO_TLS_CLIENT_KEYSTORE_PASSWORD: keypw_zookeeper2
+      ZOO_TLS_CLIENT_TRUSTSTORE_PASSWORD: trustzookeeper2
+      ZOO_TLS_QUORUM_KEYSTORE_PASSWORD: keypw_zookeeper2
+      ZOO_TLS_QUORUM_TRUSTSTORE_PASSWORD: trustzookeeper2
+
+    volumes:
+      - zookeeper_2_data:/bitnami/zookeeper
+      - "./ssl/zookeeper2/zookeeper2.keystore.jks:/zookeeper.keystore.jks:ro"
+      - "./ssl/zookeeper2/zookeeper2.truststore.jks:/zookeeper.truststore.jks:ro"
+
+  zookeeper3:
+    image: 'bitnami/zookeeper:3.7'
+    ports:
+      # - '2181:2181'
+      - '3183:3181'
+    environment:
+      <<: *zookeeper-config
+      ZOO_SERVER_ID: 3
+      ZOO_TLS_CLIENT_KEYSTORE_PASSWORD: keypw_zookeeper3
+      ZOO_TLS_CLIENT_TRUSTSTORE_PASSWORD: trustzookeeper3
+      ZOO_TLS_QUORUM_KEYSTORE_PASSWORD: keypw_zookeeper3
+      ZOO_TLS_QUORUM_TRUSTSTORE_PASSWORD: trustzookeeper3
+
+    volumes:
+      - zookeeper_3_data:/bitnami/zookeeper
+      - "./ssl/zookeeper3/zookeeper3.keystore.jks:/zookeeper.keystore.jks:ro"
+      - "./ssl/zookeeper3/zookeeper3.truststore.jks:/zookeeper.truststore.jks:ro"
+
+  kafka1:
+    image: 'bitnami/kafka:3'
+    ports:
+      - '9092:9092'
+    environment:
+      <<: *broker-config
+      KAFKA_BROKER_ID: 1
+      KAFKA_CFG_BROKER_RACK: RACK1
+      KAFKA_CFG_ADVERTISED_LISTENERS: SSL://kafka1:9092
+      KAFKA_CFG_LISTENERS: SSL://kafka1:9092
+      KAFKA_CFG_SSL_TRUSTSTORE_PASSWORD: trustkafka1
+      KAFKA_CFG_SSL_KEYSTORE_PASSWORD: keypw_kafka1
+
+    # entrypoint: cat /opt/bitnami/kafka/config/log4j.properties
+    volumes:
+      - kafka_1_data:/bitnami/kafka
+      - "./ssl/kafka1/kafka1.keystore.jks:/opt/bitnami/kafka/config/certs/kafka.keystore.jks:ro"
+      - "./ssl/kafka1/kafka1.truststore.jks:/opt/bitnami/kafka/config/certs/kafka.truststore.jks:ro"
+      - "./ssl/kafkazookeeper/kafkazookeeper.truststore.jks:/opt/bitnami/kafka/config/certs/zookeeper.truststore.jks:ro"
+      - "./ssl/kafkazookeeper/kafkazookeeper.keystore.jks:/opt/bitnami/kafka/config/certs/zookeeper.keystore.jks:ro"
+      # Debug log4j properties
+      # - "./kafka_debug_log4j.properties:/opt/bitnami/kafka/config/log4j.properties"
+      # depends_on:
+      #   - zookeeper
+
+  kafka2:
+    image: 'bitnami/kafka:3'
+    ports:
+      - '9093:9092'
+    environment:
+      <<: *broker-config
+      KAFKA_BROKER_ID: 2
+      KAFKA_CFG_BROKER_RACK: RACK1
+      KAFKA_CFG_LISTENERS: SSL://kafka2:9092
+      KAFKA_CFG_ADVERTISED_LISTENERS: SSL://kafka2:9092
+      KAFKA_CFG_SSL_KEYSTORE_PASSWORD: keypw_kafka2
+      KAFKA_CFG_SSL_TRUSTSTORE_PASSWORD: trustkafka2
+    volumes:
+      - kafka_2_data:/bitnami/kafka
+      - "./ssl/kafka2/kafka2.keystore.jks:/opt/bitnami/kafka/config/certs/kafka.keystore.jks:ro"
+      - "./ssl/kafka2/kafka2.truststore.jks:/opt/bitnami/kafka/config/certs/kafka.truststore.jks:ro"
+      - "./ssl/kafkazookeeper/kafkazookeeper.truststore.jks:/opt/bitnami/kafka/config/certs/zookeeper.truststore.jks:ro"
+      - "./ssl/kafkazookeeper/kafkazookeeper.keystore.jks:/opt/bitnami/kafka/config/certs/zookeeper.keystore.jks:ro"
+
+  kafka3:
+    image: 'bitnami/kafka:3'
+    ports:
+      - '9094:9092'
+    environment:
+      <<: *broker-config
+      KAFKA_BROKER_ID: 3
+      KAFKA_CFG_BROKER_RACK: RACK1
+      KAFKA_CFG_LISTENERS: SSL://kafka3:9092
+      KAFKA_CFG_ADVERTISED_LISTENERS: SSL://kafka3:9092
+      KAFKA_CFG_SSL_KEYSTORE_PASSWORD: keypw_kafka3
+      KAFKA_CFG_SSL_TRUSTSTORE_PASSWORD: trustkafka3
+    volumes:
+      - kafka_3_data:/bitnami/kafka
+      - "./ssl/kafka3/kafka3.keystore.jks:/opt/bitnami/kafka/config/certs/kafka.keystore.jks:ro"
+      - "./ssl/kafka3/kafka3.truststore.jks:/opt/bitnami/kafka/config/certs/kafka.truststore.jks:ro"
+      - "./ssl/kafkazookeeper/kafkazookeeper.truststore.jks:/opt/bitnami/kafka/config/certs/zookeeper.truststore.jks:ro"
+      - "./ssl/kafkazookeeper/kafkazookeeper.keystore.jks:/opt/bitnami/kafka/config/certs/zookeeper.keystore.jks:ro"
+
+  kafkaui:
+    image: provectuslabs/kafka-ui
+    container_name: kafkaui
+    ports:
+      - "3030:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka1:9092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+      KAFKA_CLUSTERS_0_PROPERTIES_SECURITY_PROTOCOL: SSL
+      # KAFKA_CLUSTERS_0_PROPERTIES_SSL_KEY_PASSWORD
+      KAFKA_CLUSTERS_0_PROPERTIES_SSL_KEYSTORE_PASSWORD: kafkauikeypass
+      KAFKA_CLUSTERS_0_PROPERTIES_SSL_KEYSTORE_LOCATION: /kafkaui.keystore.jks
+      KAFKA_CLUSTERS_0_PROPERTIES_SSL_TRUSTSTORE_LOCATION: /kafkaui.truststore.jks
+      KAFKA_CLUSTERS_0_PROPERTIES_SSL_TRUSTSTORE_PASSWORD: kafkauitrustpass
+      KAFKA_CLUSTERS_0_ZOOKEEPER_CLIENTCNXNSOCKET: org.apache.zookeeper.ClientCnxnSocketNetty
+      KAFKA_CLUSTERS_0_ZOOKEEPER_CLIENT_SECURE: 'true'
+      KAFKA_CLUSTERS_0_ZOOKEEPER_SSL_KEYSTORE_LOCATION: /kafkazookeeper.keystore.jks
+      KAFKA_CLUSTERS_0_ZOOKEEPER_SSL_KEYSTORE_PASSWORD: kafkazookeeper
+      KAFKA_CLUSTERS_0_ZOOKEEPER_SSL_TRUSTSTORE_LOCATION: /kafkazookeeper.truststore.jks
+      KAFKA_CLUSTERS_0_ZOOKEEPER_SSL_TRUSTSTORE_PASSWORD: kafkazookeeper
+    volumes:
+      - ./ssl/kafkaui/kafkaui.truststore.jks:/kafkaui.truststore.jks
+      - ./ssl/kafkaui/kafkaui.keystore.jks:/kafkaui.keystore.jks
+      - "./ssl/kafkazookeeper/kafkazookeeper.truststore.jks:/kafkazookeeper.truststore.jks"
+      - "./ssl/kafkazookeeper/kafkazookeeper.keystore.jks:/kafkazookeeper.keystore.jks"
+
+  zookeeperui:
+    image: elkozmon/zoonavigator:latest
+    container_name: zookeeperui
+    ports:
+      - "4040:9000"
+    environment:
+      ZK_CLIENT_SECURE: true
+      ZK_SSL_KEYSTORE_PATH: /zoonavigator.keystore.jks
+      ZK_SSL_KEYSTORE_PASSWORD: key_zoonavigator
+      ZK_SSL_TRUSTSTORE_PATH: /zoonavigator.truststore.jks
+      ZK_SSL_TRUSTSTORE_PASSWORD: trust_zoonavigator
+      CONNECTION_1_NAME: zookeeper
+      CONNECTION_1_CONN: zookeeper:3181,zookeeper2:3181,zookeeper3:3181
+      AUTO_CONNECT_CONNECTION_ID: 1
+    volumes:
+      - "./ssl/zoonavigator/zoonavigator.truststore.jks:/zoonavigator.truststore.jks:ro"
+      - "./ssl/zoonavigator/zoonavigator.keystore.jks:/zoonavigator.keystore.jks:ro"
+
+volumes:
+  zookeeper_1_data:
+    driver: local
+  zookeeper_2_data:
+    driver: local
+  zookeeper_3_data:
+    driver: local
+  kafka_1_data:
+    driver: local
+  kafka_2_data:
+    driver: local
+  kafka_3_data:
+    driver: local
+
+  producer:
+    external: true
