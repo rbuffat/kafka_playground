@@ -2,7 +2,7 @@ version: "3"
 
 x-broker-config:
   &broker-config
-  KAFKA_CFG_ZOOKEEPER_CONNECT: zookeeper:3181,zookeeper2:3181,zookeeper3:3181
+  KAFKA_CFG_ZOOKEEPER_CONNECT: kafkasslv3-zookeeper-1.kafka:3181,kafkasslv2-zookeeper-1.kafka:3181,kafkasslv3-zookeeper3-1.kafka:3181
   KAFKA_CFG_SECURITY_INTER_BROKER_PROTOCOL: SSL
   KAFKA_CFG_SSL_CLIENT_AUTH: requested
   KAFKA_CFG_SSL_KEYSTORE_TYPE: JKS
@@ -12,7 +12,7 @@ x-broker-config:
   KAFKA_ZOOKEEPER_TLS_KEYSTORE_PASSWORD: kafkazookeeper
   KAFKA_ZOOKEEPER_TLS_TRUSTSTORE_PASSWORD: kafkazookeeper
   KAFKA_ZOOKEEPER_TLS_TYPE: JKS
-  KAFKA_ZOOKEEPER_TLS_VERIFY_HOSTNAME: false
+  KAFKA_ZOOKEEPER_TLS_VERIFY_HOSTNAME: true
   KAFKA_ZOOKEEPER_TLS_TRUSTSTORE_FILE: /opt/bitnami/kafka/config/certs/zookeeper.truststore.jks
   KAFKA_CFG_SSL_KEYSTORE_LOCATION: /opt/bitnami/kafka/config/certs/kafka.keystore.jks
   KAFKA_CFG_SSL_TRUSTSTORE_LOCATION: /opt/bitnami/kafka/config/certs/kafka.truststore.jks
